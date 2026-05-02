@@ -2,136 +2,49 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Edmor Game Launcher</title>
     <style>
-        :root {
-            --bg-main: #f4f5f7;
-            --header-purple: #6b46c1;
-            --bg-card: #ffffff;
-            --text-white: #ffffff;
-            --border: #e2e8f0;
-        }
-
-        body {
-            background-color: var(--bg-main);
-            color: #1a202c;
-            font-family: 'Segoe UI', sans-serif;
-            margin: 0; padding: 0;
-            overflow-x: hidden;
-        }
-
-        header {
-            height: 65px;
-            display: flex;
-            align-items: center;
-            padding: 0 20px;
-            background: var(--header-purple);
-            position: fixed;
-            top: 0; width: 100%; z-index: 1000;
-            box-sizing: border-box;
-        }
-
-        .logo-center {
-            position: absolute; left: 50%; top: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 14px; font-weight: 800; letter-spacing: 1.5px;
-            color: var(--text-white); white-space: nowrap;
-            text-transform: uppercase; margin: 0;
-        }
-
-        .nav-icon {
-            width: 22px; cursor: pointer;
-            display: flex; flex-direction: column; gap: 5px; z-index: 1100;
-        }
-        .nav-icon div { height: 2px; width: 100%; background-color: var(--text-white); }
-
-        .bubble-nav {
-            margin-top: 65px; padding: 12px 15px;
-            display: flex; gap: 10px; overflow-x: auto;
-            background: var(--bg-card); border-bottom: 1px solid var(--border);
-            scrollbar-width: none; position: sticky; top: 65px; z-index: 999;
-        }
-        .bubble-nav::-webkit-scrollbar { display: none; }
-
-        .bubble {
-            padding: 8px 18px; background: #f0edf7; color: var(--header-purple);
-            border-radius: 50px; font-size: 12px; font-weight: 700;
-            white-space: nowrap; cursor: pointer; transition: 0.2s;
-        }
-        .bubble.active { background: var(--header-purple); color: var(--text-white); }
-
-        main { padding: 20px 20px 50px 20px; }
-        
-        .game-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px;
-        }
-
-        .game-card {
-            height: 210px; background-color: var(--bg-card);
-            border-radius: 30px; border: 1px solid var(--border);
-            overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-            cursor: pointer; transition: transform 0.2s;
-        }
-        .game-card:active { transform: scale(0.95); }
-        .game-card img { width: 100%; height: 100%; object-fit: cover; }
-        .game-card.hidden { display: none; }
+        /* Önceki stil kodların aynen kalsın (Mor header, bubble vb.) */
+        :root { --header-purple: #6b46c1; --bg: #f4f5f7; }
+        body { background: var(--bg); font-family: sans-serif; margin: 0; padding-top: 65px; }
+        header { background: var(--header-purple); height: 65px; position: fixed; top: 0; width: 100%; display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .logo { color: white; font-weight: 800; letter-spacing: 2px; }
+        .game-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; padding: 20px; }
+        .game-card { background: white; border-radius: 20px; height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .game-title { font-size: 12px; font-weight: bold; margin-top: 10px; word-break: break-all; }
+        .platform-badge { font-size: 10px; color: var(--header-purple); font-weight: bold; }
     </style>
 </head>
-<body>
-
-    <header>
-        <div class="nav-icon" onclick="alert('Menü')">
-            <div></div><div></div><div></div>
-        </div>
-        <h1 class="logo-center">EDMOR GAME LAUNCHER</h1>
-    </header>
-
-    <nav class="bubble-nav">
-        <div class="bubble active" onclick="filter('TÜMÜ', this)">TÜMÜ</div>
-        <div class="bubble" onclick="filter('PSP', this)">PSP</div>
-        <div class="bubble" onclick="filter('PS1', this)">PS1</div>
-        <div class="bubble" onclick="filter('NINTENDO', this)">NINTENDO</div>
-    </nav>
-
-    <main>
-        <div class="game-grid" id="game-container">
-            <!-- PSP OYUNU ÖRNEĞİ -->
-            <!-- Path kısmına telefonundaki gerçek yolu yazmalısın -->
-            <div class="game-card" data-platform="PSP" onclick="play('PSP', '/storage/emulated/0/PSP/GAMES/gow.iso')">
-                <img src="https://m.media-amazon.com/images/I/51M3N7N1W5L.jpg">
-            </div>
-
-            <!-- PS1 OYUNU ÖRNEĞİ -->
-            <div class="game-card" data-platform="PS1" onclick="play('PS1', '/storage/emulated/0/PS1/tekken3.bin')">
-                <img src="https://m.media-amazon.com/images/I/61N7W4F4F9L.jpg">
-            </div>
-        </div>
-    </main>
+<body onload="loadGames()">
+    <header><div class="logo">EDMOR GAME LAUNCHER</div></header>
+    <main><div class="game-grid" id="container"><!-- Oyunlar buraya dolacak --></div></main>
 
     <script>
-        // --- JAVA KÖPRÜSÜ TETİKLEYİCİ ---
-        function play(platform, path) {
+        function loadGames() {
             if (window.AndroidBridge) {
-                window.AndroidBridge.launchEmulator(platform, path);
-            } else {
-                alert("Sistem Köprüsü Bulunamadı (Sadece Android Cihazda Çalışır)");
-            }
-        }
+                // Java'dan JSON listesini çek
+                const jsonString = window.AndroidBridge.getGamesJson();
+                const games = JSON.parse(jsonString);
+                const container = document.getElementById('container');
+                container.innerHTML = '';
 
-        // --- FİLTRELEME MANTIĞI ---
-        function filter(platform, el) {
-            document.querySelectorAll('.bubble').forEach(b => b.classList.remove('active'));
-            el.classList.add('active');
-
-            const cards = document.querySelectorAll('.game-card');
-            cards.forEach(card => {
-                if (platform === 'TÜMÜ' || card.getAttribute('data-platform') === platform) {
-                    card.classList.remove('hidden');
-                } else {
-                    card.classList.add('hidden');
+                if (games.length === 0) {
+                    container.innerHTML = '<p style="text-align:center; width:100%;">Oyun bulunamadı. Lütfen ROM'ları PSP veya Download klasörüne atın.</p>';
+                    return;
                 }
-            });
+
+                games.forEach(game => {
+                    const card = document.createElement('div');
+                    card.className = 'game-card';
+                    card.onclick = () => window.AndroidBridge.launchEmulator(game.platform, game.path);
+                    card.innerHTML = `
+                        <div class="platform-badge">${game.platform}</div>
+                        <div class="game-title">${game.title}</div>
+                    `;
+                    container.appendChild(card);
+                });
+            }
         }
     </script>
 </body>
